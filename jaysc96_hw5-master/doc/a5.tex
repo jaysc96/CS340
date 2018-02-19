@@ -1,0 +1,215 @@
+\documentclass{article}
+
+\usepackage{etoolbox}
+
+
+\usepackage{fullpage}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{amssymb}
+\usepackage{listings} % For displaying code
+
+\begin{document}
+
+% Colors
+\definecolor{blu}{rgb}{0,0,1}
+\def\blu#1{{\color{blu}#1}}
+\definecolor{gre}{rgb}{0,.5,0}
+\def\gre#1{{\color{gre}#1}}
+\definecolor{red}{rgb}{1,0,0}
+\def\red#1{{\color{red}#1}}
+\def\norm#1{\|#1\|}
+\newcommand{\argmin}[1]{\mathop{\hbox{argmin}}_{#1}}
+\newcommand{\argmax}[1]{\mathop{\hbox{argmax}}_{#1}}
+\def\R{\mathbb{R}}
+\newcommand{\fig}[2]{\includegraphics[width=#1\textwidth]{#2}}
+\newcommand{\centerfig}[2]{\begin{center}\includegraphics[width=#1\textwidth]{#2}\end{center}}
+\def\items#1{\begin{itemize}#1\end{itemize}}
+\def\enum#1{\begin{enumerate}#1\end{enumerate}}
+\newcommand{\code}[1]{\lstinputlisting[language=Matlab]{#1}}
+\newcommand{\half}{\frac 1 2}
+\def\argmax{\mathop{\rm arg\,max}}
+\def\argmin{\mathop{\rm arg\,min}}
+\def\rubric#1{\gre{Rubric: \{#1\}}}{}
+
+
+\title{CPSC 340 Assignment 5 (due March 31 at 11:59pm)}
+\author{Latent-Factor Models}
+\date{}
+\maketitle
+
+\section*{Instructions}
+\rubric{mechanics:3}
+
+The above points are allocated for following the general homework instructions.
+
+\vspace{1em}
+
+As usual, if you're using Python 2:
+\begin{itemize}
+  \item Add \verb|from __future__ import division| to the top of each Python file. 
+  \item Grab the Python 2 compatible data files from the ``home'' repo on GitHub.
+\end{itemize}
+
+\vspace{1em}
+Attention Python 3 users: this time you need to grab the data files from the ``home'' repo 
+\textbf{even if you're using Python 3}. This has to do with one of the files being over 1 MB, 
+which makes it more difficult to distribute to your individual repos in the usual way.
+
+
+
+\section{Principal Component Analysis}
+
+\subsection{PCA by Hand}
+\rubric{reasoning:3}
+
+
+Consider the following dataset, containing 5 examples with 2 features each:
+\begin{center}
+\begin{tabular}{cc}
+$x_1$ & $x_2$\\
+\hline
+-2 & -1\\
+-1 & 0\\
+0 & 1\\
+1 & 2\\
+2 & 3\\
+\end{tabular}
+\end{center}
+Recall that with PCA we usually assume that the PCs are normalized ($\norm{w} = 1$), we need to center the data before we apply PCA, and that the direction of the first PC is the one that minimizes the orthogonal distance to all data points.
+\blu{
+\enum{
+\item What is the first principal component?
+\item What is the (L2-norm) reconstruction error of the point (3,3)? (Show your work.)
+\item What is the (L2-norm) reconstruction error of the point (3,4)? (Show your work.)
+}
+}
+
+\enum{
+\item 1st PCA: $w = [1 \ 0]$
+\item $z=w^Tx=[1 \ 0]^T[3 \ 3]=[3 \ 0]$
+$f(W,Z)=\norm{w^Tz-x}=\norm{[1 \ 0]^T[3 \ 0]-[3 \ 3]}=\norm{[0 \ -3]}=9$
+\item $z=w^Tx=[1 \ 0]^T[3 \ 4]=[3 \ 0]$
+$f(W,Z)=\norm{w^Tz-x}=\norm{[1 \ 0]^T[3 \ 0]-[3 \ 4]}=\norm{[0 \ -4]}=16$
+}
+
+
+\subsection{Data Visualization}
+\rubric{reasoning:2}
+
+The command \emph{main -q 1.2} will load the animals dataset from a previous assignment, standardize the features, and then give two unsatisfying visualizations of it. 
+First it shows a plot of the matrix entries, which has too much information and thus gives little insight into the relationships between the animals. 
+Next it shows a scatterplot based on two random features. 
+We label some random points, but because of the binary features even a scatterplot matrix will show us almost nothing about the data.
+
+The class \emph{pca.PCA} applies the classic PCA method (orthogonal bases via SVD) for a given $k$. 
+Using this class, modify the demo so that the scatterplot uses the latent features $z_i$ from the PCA model. 
+Make a scatterplot of the two columns in $Z$, and label a bunch of the points in the scatterplot. \blu{Hand in your modified demo and the scatterplot}.
+
+\centerfig{.7}{../figs/q1_scatterplot_visualization.png}
+ 
+
+\subsection{Data Compression}
+\rubric{reasoning:2}
+
+It is important to know how much of the information in our dataset is captured by the low-dimensional PCA representation.
+In class we discussed the ``analysis" view that PCA maximizes the variance that is explained by the PCs, and the connection between the Frobenius norm and the variance of a centered data matrix $X$. Use this connection to answer the following:
+\blu{\enum{
+\item How much of the variance is explained by our two-dimensional representation from the previous question?
+\item How many PCs are required to explain 50\% of the variance in the data?
+}}
+
+\enum{
+\item We get $k \approx 0.84$, which explains about $15\%$ variance.
+\item To explain a variance of $50\%$, we need $\frac{d}{2}$ principal components.
+}
+
+\section{PCA Generalizations}
+
+
+\subsection{Robust PCA}
+\rubric{code:4}
+
+The command \emph{main -q 2.1} loads a dataset $X$ where each row contains the pixels from a single frame of a video of a highway. The demo applies PCA to this dataset and then uses this to reconstruct the original image. 
+It then shows the following 3 images for each frame (pausing and waiting for input between each frame):
+\enum{
+\item The original frame.
+\item The reconstruction based on PCA.
+\item A binary image showing locations where the reconstruction error is non-trivial.
+}
+Recently, latent-factor models have been proposed as a strategy for ``background subtraction'': trying to separate objects from their background. In this case, the background is the highway and the objects are the cars on the highway. In this demo, we see that PCA does an ok job of identifying the cars on the highway in that it does tend to identify the locations of cars. However, the results aren't great as it identifies quite a few irrelevant parts of the image as objects.
+
+Robust PCA is a variation on PCA where we replace the L2-norm with the L1-norm,
+\[
+f(Z,W) = \sum_{i=1}^n\sum_{j=1}^d |w_j^Tz_i - x_{ij}|,
+\]
+and it has recently been proposed as a more effective model for background subtraction. \blu{Complete the class \emph{pca.RobustPCA}, 
+that uses a smooth approximation to the absolute value to implement robust PCA.}
+
+Hint: most of the work has been done for you in the class \emph{pca.AlternativePCA}. This work implements an alternating minimization approach to minimizing the (squared) PCA objective (without enforcing orthogonality). This gradient-based approach to PCA can be modified to use a smooth approximation of the L1-norm. Note that the log-sum-exp approximation to the absolute value may be hard to get working due to numerical issues, and a numerically-nicer approach is to use the ``multi-quadric'' approximation:
+\[
+|\alpha| \approx \sqrt{\alpha^2 + \epsilon},
+\]
+where $\epsilon$ controls the accuracy of the approximation (a typical value of $\epsilon$ is $0.0001$).
+
+
+\subsection{L1-Regularized and Binary Latent-Factor Models}
+\rubric{reasoning:5}
+
+We have a matrix $X$, where we have observed a subset of its individual elements. Let $\mathcal{R}$ be the set of indices $(i,j)$ where we have observed the element $x_{ij}$. We want to build a model that predicts the missing entries, so we use a latent-factor model with an L1-regularizer on the coefficients $W$ and a separate L2-regularizer on the coefficients $Z$,
+\[
+f(Z,W) = \frac{1}{2}\sum_{(i,j) \in \mathcal{R}}\left[(w_j^Tz_i - x_{ij})^2 \right] + \lambda_W \sum_{j=1}^d \left[\norm{w_j}_1\right] + \frac{\lambda_Z}{2} \sum_{i=1}^n \left[\norm{z_i}^2\right],
+\]
+where the regularization parameters satisfy $\lambda_W > 0$ and $\lambda_Z > 0$.
+
+\blu{
+\enum{
+\item What is the effect of $\lambda_W$ on the sparsity of the parameters $W$ and $Z$? What is the effect of $\lambda_Z$ on the sparsity of $W$ and $Z$?
+\item What is the effect of $\lambda_Z$ on the two parts of the fundamental trade-off in machine learning? What is the effect of $k$ on the two parts?
+\item Would the answers to (2) change if $\lambda_W = 0$?
+\item Suppose each element of the matrix $X$ is either $+1$ or $-1$ and our goal is to build a model that makes the sign of $w_j^Tz_i$ match the sign of $x_{ij}$. Write down a (continuous) objective function that would be more suitable.
+}}
+
+\enum{
+\item A larger $\lambda_W$ yields sparser 'W', since it regularizes the L1-norm and does feature selection. $\lambda_Z$ does not yield sparser results since it regularizes the L2-norm which does not do feature selection.
+\item A larger $\lambda_Z$ regularizes the L2-norm and thus reduces overfitting by raising training error, which increases how well the training error approximates testing error. A higher k would promote overfitting since we would do more feature selection, thus decreasing training error, but not approximating the testing error well.
+\item No, since they do not depend on $\lambda_W$
+\item We can change all -1's to 0 and use a logistic loss objective function as in assignment 4 to approximate X.
+}
+
+
+\section{Multi-Dimensional Scaling}
+
+The command \emph{main -q 3} loads the animals dataset and then applies gradient dsecent to minimize the following multi-dimensional scaling (MDS) objective (starting from the PCA solution):
+\begin{equation}
+\label{eq:MDS}
+f(Z) =  \frac{1}{2}\sum_{i=1}^n\sum_{j=i+1}^n (  \norm{z_i - z_j} - \norm{x_i - x_j})^2.
+\end{equation}
+ The result of applying MDS is shown below.
+\centerfig{.5}{../figs/q3_MDS_animals.png}
+Although this visualization isn't perfect (with ``gorilla'' being placed close to the dogs and ``otter'' being placed close to two types of bears), this visualization does organize the animals in a mostly-logical way.
+
+
+\subsection{ISOMAP}
+\rubric{code:4}
+
+Euclidean distances between very different animals are unlikely to be particularly meaningful. However, since related animals tend to share similar traits we might expect the animals to live on a low-dimensional manifold. This suggests that ISOMAP may give a better visualization. 
+Make a new class \emph{ISOMAP} that computes the approximate geodesic distance (shortest path through a graph where the edges are only between nodes that are $k$-nearest neighbour) between each pair of points, and then fits a standard MDS model~\eqref{eq:MDS} using gradient descent. \blu{Hand in your code and the plot of the result when using the $3$-nearest neighbours}.
+
+Hint: the function \emph{utils.dijskstra} can be used to compute the shortest (weighted) distance between two points in a weighted graph. This function requires an $n$ by $n$ matrix giving the weights on each edge (use $0$ as the weight for absent edges). Note that ISOMAP uses an undirected graph, while the $k$-nearest neighbour graph might be asymmetric. One of the usual heuristics to turn this into a undirected graph is to include an edge $i$ to $j$ if $i$ is a KNN of $j$ or if $j$ is a KNN of $i$. (Another possibility is to include an edge only if $i$ and $j$ are mutually KNNs.)
+
+\centerfig{.7}{../figs/q3_1_MDS_animals.png}
+
+
+\subsection{ISOMAP with Disconnected Graph}
+\rubric{code:2}
+
+An issue with measuring distances on graphs is that the graph may not be connected. For example, if you run your ISOMAP code with $2$-nearest neighbours then some of the distances are infinite. One heuristic to address this is to set these infinite distances to the maximum distance in the graph (i.e., the maximum geodesic distance between any two points that are connected), which will encourage non-connected points to be far apart. Modify your ISOMAP function to implement this heuristic. \blu{Hand in your code and the plot of the result when using the $2$-nearest neighbours}.
+
+\centerfig{.7}{../figs/q3_2_MDS_animals.png}
+
+\end{document}

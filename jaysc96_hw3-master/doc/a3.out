@@ -1,0 +1,16 @@
+\BOOKMARK [1][-]{section.1}{Vectors, Matrices, and Quadratic Functions}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Basic Operations}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Converting to Matrix/Vector/Norm Notation}{section.1}% 3
+\BOOKMARK [2][-]{subsection.1.3}{Minimizing Quadratic Functions as Linear Systems}{section.1}% 4
+\BOOKMARK [1][-]{section.2}{Linear Regression and Nonlinear Bases}{}% 5
+\BOOKMARK [2][-]{subsection.2.1}{Adding a Bias Variable}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.2}{Polynomial Basis}{section.2}% 7
+\BOOKMARK [1][-]{section.3}{Non-Parametric Bases and Cross-Validation}{}% 8
+\BOOKMARK [2][-]{subsection.3.1}{Proper Training and Validation Sets}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.2}{Cross-Validation}{section.3}% 10
+\BOOKMARK [2][-]{subsection.3.3}{Cost of Non-Parametric Bases}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.4}{Non-Parametric Bases with Uneven Data}{section.3}% 12
+\BOOKMARK [1][-]{section.4}{Robust Regression and Gradient Descent}{}% 13
+\BOOKMARK [2][-]{subsection.4.1}{Weighted Least Squares in One Dimension}{section.4}% 14
+\BOOKMARK [2][-]{subsection.4.2}{Smooth Approximation to the L1-Norm}{section.4}% 15
+\BOOKMARK [2][-]{subsection.4.3}{Robust Regression}{section.4}% 16

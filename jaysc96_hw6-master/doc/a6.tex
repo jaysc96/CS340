@@ -1,0 +1,90 @@
+\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{amssymb}
+\usepackage{listings} % For displaying code
+
+\begin{document}
+
+% Colors
+\definecolor{blu}{rgb}{0,0,1}
+\def\blu#1{{\color{blu}#1}}
+\definecolor{gre}{rgb}{0,.5,0}
+\def\gre#1{{\color{gre}#1}}
+\definecolor{red}{rgb}{1,0,0}
+\def\red#1{{\color{red}#1}}
+\def\norm#1{\|#1\|}
+\newcommand{\argmin}[1]{\mathop{\hbox{argmin}}_{#1}}
+\newcommand{\argmax}[1]{\mathop{\hbox{argmax}}_{#1}}
+\def\R{\mathbb{R}}
+\newcommand{\fig}[2]{\includegraphics[width=#1\textwidth]{#2}}
+\newcommand{\centerfig}[2]{\begin{center}\includegraphics[width=#1\textwidth]{#2}\end{center}}
+\def\items#1{\begin{itemize}#1\end{itemize}}
+\def\enum#1{\begin{enumerate}#1\end{enumerate}}
+\def\answer#1{\iftoggle{answers}{\blu{Answer}:\\#1}}
+\newcommand{\code}[1]{\lstinputlisting[language=Matlab]{#1}}
+\newcommand{\half}{\frac 1 2}
+\def\argmax{\mathop{\rm arg\,max}}
+\def\argmin{\mathop{\rm arg\,min}}
+\def\rubric#1{\gre{Rubric: \{#1\}}}{}
+
+
+\title{CPSC 340 Assignment 6 (due Friday April 7 at 11:59pm)}
+\author{Neural Networks}
+\date{}
+\maketitle
+
+
+\section*{Instructions}
+\rubric{mechanics:3}
+
+The above points are allocated for following the general homework instructions on GitHub.
+
+\vspace{1em}
+
+Note: this assignment is a bit more open-ended than the previous ones. There aren't really ``correct answers''. 
+Try to have fun with it and learn something along the way. We'll mark generously... no need to go overboard!
+
+\section{Neural Networks}
+\rubric{reasoning:5}
+
+If you run \texttt{python main.py -q 1} it will train a neural network on the \emph{basisData.pkl} data from Assignment~3. 
+However, in its current form it uses no hidden layers and therefore is just performing linear regression.
+In fact, if you take a look at the figure that is generated, you should see that it matches the figure
+from Assignment~3 Question 2.1. 
+Try to improve the performance of the neural network by adding hidden layers and tuning the other hyperparemeters. 
+\blu{Hand in your plot after changing the code to have better performance, and list the changes you made. Write a couple sentences
+explaining why you think your changes improved the performance. When appropriate, refer to concepts from the course like overfitting
+or optimization.}
+
+To see the list of hyperparameters and their definitions, see the scikit-learn MLPRegressor documentation:
+\url{http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html}. Note: ``MLP'' stands for Multi-Layer Perceptron, 
+which is another name for artificial neural network.\\
+Also: we didn't discuss L-BFGS in class, but it may help to set \verb|solver| to \verb|lbfgs| since the data set is tiny.
+
+\centerfig{.7}{../figs/modifiedBasisData.pdf}
+I changed the Regressor to 100 neurons in the 1st hidden layer, and added an alpha of 0.01 to regularize the error, and optimize the hyper-parameters, which in turn reduces overfitting. Came to the number 100 after trying various numbers between 10-1000 and tried adding layers as well, but came to the conclusion only one hidden layer was present.
+
+
+\section{Your Own Data}
+\rubric{reasoning:5}
+
+Try a neural network on the data set of your choosing. 
+You can use a data set that's built into scikit-learn
+(\url{http://scikit-learn.org/stable/datasets/}), or you can use a data set from a previous homework assignment, or something from an area that interests you. 
+If you are doing classification rather than regression, use scikit-learn's MLPClassifier rather than the MLPRegressor that we've provided in the assignment code: \url{http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html}
+
+
+\blu{Try fiddling with the hyperparameters. Write a few sentences about what you tried, what train/validation error you achieved,
+and whether you think neural networks are a good model for your dataset.} Optionally (for glory rather than marks), install Keras/TensorFlow and compare it with
+the scikit-learn neural net.
+
+For the Iris dataset in scikit, on using the MLPClassifier with no hidden layers gives Training error $=  0.0$ and Validation error $=  0.6$, while increasing the number of layers doesn't really decrease the validation error, on repeated runs, with and without hidden layers give very similar errors.
+
+\end{document}

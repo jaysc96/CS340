@@ -1,0 +1,14 @@
+\BOOKMARK [1][-]{section.1}{K-Nearest Neighbours}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{KNN Prediction}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Condensed Nearest Neighbours}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{Random Forests}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{Random Trees}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{Random Decision Forests}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{K-Means Clustering}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{Selecting among Initializations}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.2}{Selecting k}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.3}{k-Medians}{section.3}% 10
+\BOOKMARK [1][-]{section.4}{Vector Quantization and Density-Based Clustering}{}% 11
+\BOOKMARK [2][-]{subsection.4.1}{Image Colour-Space Compression}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.2}{Effect of Parameters on DBSCAN}{section.4}% 13
+\BOOKMARK [2][-]{subsection.4.3}{K-Means vs. DBSCAN Clustering}{section.4}% 14

@@ -1,0 +1,496 @@
+\documentclass{article}
+
+\usepackage{etoolbox}
+
+\usepackage{hyperref}
+\usepackage{fullpage}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{amssymb}
+\usepackage{listings} % For displaying code
+
+\begin{document}
+
+% Colors
+\definecolor{blu}{rgb}{0,0,1}
+\def\blu#1{{\color{blu}#1}}
+\definecolor{gre}{rgb}{0,.5,0}
+\def\gre#1{{\color{gre}#1}}
+\definecolor{red}{rgb}{1,0,0}
+\def\red#1{{\color{red}#1}}
+\def\norm#1{\|#1\|}
+\newcommand{\argmin}[1]{\mathop{\hbox{argmin}}_{#1}}
+\newcommand{\argmax}[1]{\mathop{\hbox{argmax}}_{#1}}
+\def\R{\mathbb{R}}
+\newcommand{\fig}[2]{\includegraphics[width=#1\textwidth]{#2}}
+\newcommand{\centerfig}[2]{\begin{center}\includegraphics[width=#1\textwidth]{#2}\end{center}}
+\def\items#1{\begin{itemize}#1\end{itemize}}
+\def\enum#1{\begin{enumerate}#1\end{enumerate}}
+\newcommand{\code}[1]{\lstinputlisting[language=Matlab]{#1}}
+\newcommand{\half}{\frac 1 2}
+\def\argmax{\mathop{\rm arg\,max}}
+\def\argmin{\mathop{\rm arg\,min}}
+\def\rubric#1{\gre{Rubric: \{#1\}}}{}
+
+
+\title{CPSC 340 Assignment 3 (due 2017-02-19 at 11:59pm)}
+\author{Linear Regression}
+\date{}
+\maketitle
+
+\section*{Instructions}
+\rubric{mechanics:3}
+
+The above points are allocated for following the general homework instructions.
+
+\vspace{1em}
+
+\textbf{A note on the provided code}: we have switched the code style to object-oriented,
+which is hopefully less painful than things like
+\begin{verbatim}
+model["predict"] = predict_equality
+\end{verbatim}
+that plagued us in earlier assignments. Now that you've all used Python for at least
+a few CPSC 340 assignments, hopefully the object-oriented style isn't too much syntax to absorb.
+
+\textbf{A note on Python 2}: if you are using Python 2.7, please add 
+\begin{verbatim}
+from __future__ import division
+\end{verbatim}
+to the top of each Python file. You should also grab the Python 2 compatible data files from the ``home'' repo on GitHub, like you did for Assignment 2.
+
+\section{Vectors, Matrices, and Quadratic Functions}
+
+The first part of this question makes you review basic operations on vectors and matrices. 
+If you are rusty on basic vector and matrix operations, see the notes on linear algebra on the course webpage. 
+The second part of the question gives you practice taking the gradient of linear and quadratic functions, 
+and the third part gives you practice finding the minimizer of quadratic functions.
+
+\subsection{Basic Operations}
+\rubric{reasoning:3}
+
+\noindent Using the definitions below,
+\[
+\alpha = 5,\quad
+x = \left[\begin{array}{c}
+2\\
+3\\
+\end{array}\right], \quad 
+y = \left[\begin{array}{c}
+1\\
+4\\
+\end{array}\right],\quad
+z = \left[\begin{array}{c}
+2\\
+0\\
+1\end{array}\right],
+\quad
+A = \left[\begin{array}{ccc}
+1 & 2\\
+2 & 3\\
+3 & 2
+\end{array}\right],
+\]
+\blu{evaluate the following expressions} (show your work, but you may use answers from previous parts to simplify calculations):\\
+\enum{
+\item $x^Tx=\left[\begin{array}{ccc}
+2 & 3\\
+\end{array}\right]\left[\begin{array}{c}
+2\\
+3\\
+\end{array}\right]=2^2+3^2=4+9=13$
+\item $\norm{x}^2=x^Tx=13$
+\item $x^T(x + \alpha y)=\left[\begin{array}{ccc}
+2 & 3\\
+\end{array}\right](\left[\begin{array}{c}
+2\\
+3\\
+\end{array}\right]+5\left[\begin{array}{c}
+1\\
+4\\
+\end{array}\right])=\left[\begin{array}{ccc}
+2 & 3\\
+\end{array}\right]\left[\begin{array}{c}
+7\\
+23\\
+\end{array}\right]=2(7)+3(23)=83$
+\item $Ax=\left[\begin{array}{ccc}
+1 & 2\\
+2 & 3\\
+3 & 2
+\end{array}\right] \left[\begin{array}{c}
+2\\
+3\\
+\end{array}\right]=\left[\begin{array}{c}
+2+6\\
+4+9\\
+6+6
+\end{array}\right]=\left[\begin{array}{c}
+8\\
+13\\
+12
+\end{array}\right]$
+\item $z^TAx=\left[\begin{array}{ccc}
+2 & 0 & 1
+\end{array}\right]\left[\begin{array}{c}
+8\\
+13\\
+12
+\end{array}\right]=2(8)+0(13)+1(12)=28$
+\item $A^TA=\left[\begin{array}{ccc}
+1 & 2 & 3\\
+2 & 3 & 2
+\end{array}\right]\left[\begin{array}{cc}
+1 & 2\\
+2 & 3\\
+3 & 2
+\end{array}\right]=\left[\begin{array}{cc}
+1+4+9 & 2+6+6\\
+2+6+6 & 4+9+4
+\end{array}\right]=\left[\begin{array}{cc}
+14 & 14\\
+14 & 17
+\end{array}\right]$
+}
+
+If $\{\alpha,\beta\}$ are scalars, $\{x,y,z\}$ are real-valued column-vectors of length $d$,
+and $\{A,B,C\}$ are real-valued $d\times d$ matrices, \blu{state whether each of the below statements is true or false in general
+and give a short explanation.}
+\enum{
+\addtocounter{enumi}{6}
+\item $yy^Ty = \norm{y}^2y$
+\newline False, as $\norm{y}^2=y^Ty\neq{yy^T}$
+\item $x^TA^T(Ay + Az) = x^TA^TAy + z^TA^TAx$
+\newline False, $x^TA^T(Ay + Az) = x^TA^TAy + x^TA^TAz$
+% \item $A^T(B + C) = BA^T + CA^T$.
+\item $x^T(B + C) = Bx + Cx$
+\newline False, as $x^TA$ is not the same as $Ax$
+\item $(A + BC)^T = A^T + C^TB^T$
+\newline True, as $(A + BC)^T=A^T+(BC)^T=A^T+C^TB^T$
+\item $(x-y)^T(x-y) = \norm{x}^2 - x^Ty + \norm{y}^2$
+\newline False, as $(x-y)^T(x-y)=\norm{x-y}^2 = \norm{x}^2 - 2x^Ty + \norm{y}^2$
+\item $(x-y)^T(x+y) = \norm{x}^2 - \norm{y}^2$
+\newline True, as $(x_i-y_i)(x_i+y_i)=x_i^2-y_i^2$
+\newline therefore, $(x-y)^T(x+y) = \norm{x}^2 - \norm{y}^2$
+}
+
+Hint: check the dimensions of the result, and remember that matrix multiplication is generally not commutative.
+
+
+\subsection{Converting to Matrix/Vector/Norm Notation}
+\rubric{reasoning:3}
+
+Using our standard supervised learning notation ($X$, $y$, $w$)
+express the following functions in terms of vectors, matrices, and norms (there should be no summations or maximums).
+\blu{\enum{
+\item $\sum_{i=1}^n |w^Tx_i - y_i|$.
+\item $\max_{i \in \{1,2,\dots,n\}} |w^Tx_i  - y_i| + \frac{\lambda}{2}\sum_{j=1}^n w_j^2$.
+\item $\sum_{i=1}^n z_i (w^Tx_i - y_i)^2 + \lambda \sum_{j=1}^{d} |w_j|$.
+}}
+You can use $Z$ to denote a diagonal matrix that has the values $z_i$ along the diagonal.
+
+\enum{
+\item $\sum_{i=1}^n |w^Tx_i - y_i|=\norm{Xw-y}_1$
+\item $\max_{i \in \{1,2,\dots,n\}} |w^Tx_i  - y_i| + \frac{\lambda}{2}\sum_{j=1}^n w_j^2=\norm{Xw-y}_\infty+\frac{\lambda}{2}\norm{w}_2^2$
+\item $\sum_{i=1}^n z_i (w^Tx_i - y_i)^2 + \lambda \sum_{j=1}^{d} |w_j|=\norm{\sqrt{Z}(Xw-y)}_2^2+\lambda\norm{w}_1$
+}
+
+\subsection{Minimizing Quadratic Functions as Linear Systems}
+\rubric{reasoning:4}
+
+Write finding a minimizer $w$ of the functions below as a system of linear equations (using vector/matrix notation and simplifying as much as possible). Note that all the functions below are convex  so finding a $w$ with $\nabla f(w) = 0$ is sufficient to minimize the functions (but show your work in getting to this point).
+\blu{\enum{
+\item $f(w) = \frac{1}{2}\norm{w-v}^2$.
+\item $f(w) = \frac{1}{2}\norm{w}^2 + w^TX^Ty$ .
+\item $f(w)= \frac{1}{2}\norm{Xw - y}^2 + \frac{1}{2}w^T\Lambda w$.
+\item $f(w) = \frac{1}{2}\sum_{i=1}^n z_i (w^Tx_i - y_i)^2$.
+}}
+
+\enum{
+\item $f(w) = \frac{1}{2}\norm{w-v}^2=\frac{1}{2}(w-v)^T(w-v)=\frac{1}{2}(w^T-v^T)(w-v)=\frac{1}{2}(w^Tw-2w^Tv+v^Tv)$
+\newline
+\newline $\nabla f(w) => \frac{1}{2}(2w-2v+0) = 0$
+\newline $\nabla f(w) => w-v = 0 => w=v$
+\newline
+\newline Therefore $w=v$ is the minimizer for $f(w)$.
+\item $f(w) = \frac{1}{2}\norm{w}^2 + w^TX^Ty=\frac{1}{2}w^Tw+ w^TX^Ty$
+\newline
+\newline $\nabla f(w) => w+X^Ty =0 => w=-X^Ty$
+\newline
+\newline Therefore $w=-X^Ty$ is a minimizer for f(w).
+\item $f(w)= \frac{1}{2}\norm{Xw - y}^2 + \frac{1}{2}w^T\Lambda w$
+\newline But we know, $\frac{1}{2}\norm{Xw - y}^2=\frac{1}{2}w^TX^TXw-w^TX^Ty+\frac{1}{2}y^Ty$
+\newline
+\newline Therefore, $f(w)=\frac{1}{2}w^TX^TXw-w^TX^Ty+\frac{1}{2}y^Ty+ \frac{1}{2}w^T\Lambda w$
+\newline
+\newline $\nabla f(w) => X^TXw-X^Ty+0+\Lambda w=0$
+\newline $\nabla f(w) => (X^TX+\Lambda) w=X^Ty => w=(X^TX+\Lambda)^{-1}X^Ty$
+\newline 
+\newline Therefore if $X^TX+\Lambda$ is invertible, $w=(X^TX+\Lambda)^{-1}X^Ty$ is a minimizer for $f(w)$.
+\item $f(w) = \frac{1}{2}\sum_{i=1}^n z_i (w^Tx_i - y_i)^2= \frac{1}{2}\sum_{i=1}^n (\sqrt{z_i}( w^Tx_i - y_i))^2=\frac{1}{2}\norm{\sqrt{Z}(Xw-y)}^2=\frac{1}{2}\norm{\sqrt{Z}Xw-\sqrt{Z}y}^2$
+\newline
+\newline $f(w)=\frac{1}{2}(\sqrt{Z}Xw-\sqrt{Z}y)^T(\sqrt{Z}Xw-\sqrt{Z}y)=\frac{1}{2}(w^TX^T\sqrt{Z^T}-y^T\sqrt{Z^T})(\sqrt{Z}Xw-\sqrt{Z}y)$
+\newline
+\newline $f(w)=\frac{1}{2}(w^TX^T\sqrt{Z^TZ}Xw-2w^TX^T\sqrt{Z^TZ}y+y^T\sqrt{Z^TZ}y)$
+\newline
+\newline $\nabla f(w) => X^T\sqrt{Z^TZ}Xw-X^T\sqrt{Z^TZ}y+0 = 0$
+\newline $\nabla f(w) => X^T\sqrt{Z^TZ}Xw=X^T\sqrt{Z^TZ}y => w=(X^T\sqrt{Z^TZ}X)^{-1}X^T\sqrt{Z^TZ}y$
+\newline
+\newline Therefore if $X^T\sqrt{Z^TZ}X$ is invertible, $w=(X^T\sqrt{Z^TZ}X)^{-1}X^T\sqrt{Z^TZ}y$ is a minimizer for $f(w)$.
+}
+
+Above we assume that $v$ is a $d \times 1$ vector, and $\Lambda$ is a $d \times d$ diagonal matrix with positive entries along the diagonal.
+
+Hint: Once you convert to vector/matrix notation, you can use the results from class to quickly compute these quantities term-wise. 
+As a sanity check for your derivation, make sure that your results have the right dimensions.
+
+
+\section{Linear Regression and Nonlinear Bases}
+
+In class we discuss fitting a linear regression model by minimizing the squared error. 
+This classic model is the simplest version of many of the more complicated models we will discuss in the course. 
+However, it typically performs very poorly in practice. 
+One of the reasons it performs poorly is that it assumes that the target $y_i$ is a linear function of 
+the features $x_i$ with an intercept of zero. This drawback can be addressed by adding a bias variable
+ and using nonlinear bases (although nonlinear bases may increase to over-fitting). 
+
+In this question, you will start with a data set where least squares performs poorly. 
+You will then explore how adding a bias variable and using nonlinear (polynomial) bases can drastically improve the performance. 
+You will also explore how the complexity of a basis affects both the training error and the test error. 
+In the final part of the question, it will be up to you to design a basis with better performance than polynomial bases. 
+
+\subsection{Adding a Bias Variable}
+\rubric{code:3,reasoning:1}
+
+If you run  \verb|python main.py -q 2.1|, it will:
+\enum{
+\item Load a one-dimensional regression dataset.
+\item Fit a least-squares linear regression model.
+\item Report the training error.
+\item Report the test error (on a dataset not used for training).
+\item Draw a figure showing the training data and what the linear model looks like.
+}
+Unfortunately, this is an awful model of the data. The average squared training error on the data set is over 28000 
+(as is the test error), and the figure produced by the demo confirms that the predictions are usually nowhere near
+ the training data:
+\centerfig{.5}{../figs/leastSquares.pdf}
+The $y$-intercept of this data is clearly not zero (it looks like it's closer to $200$), 
+so we should expect to improve performance by adding a \emph{bias} variable, so that our model is
+\[
+y_i = w^Tx_i + w_0.
+\]
+instead of
+\[
+y_i = w^Tx_i.
+\]
+\blu{In file \emph{linear\_model.py}, complete the class, \emph{LeastSquaresBias}, that has the same input/model/predict format as the \emph{LeastSquares} class, but that adds a \emph{bias} variable $w_0$. Hand in your new class, the updated plot, and the updated training/test error.}
+
+Hint: recall that adding a bias $w_0$ is equivalent to adding a column of ones to the matrix $X$. Don't forget that you need to do the same transformation in the \emph{predict} function.
+
+\items{
+\item \blu{\href{https://github.ubc.ca/cpsc340/jaysc96\_hw3/blob/master/code/linear\_model.py}{linear\_model.py}}
+\item Updated plot:	\centerfig{.7}{../figs/leastSquaresBias.pdf}
+\item Training error = 3551.346, Testing error = 3393.869
+}
+
+\subsection{Polynomial Basis}
+\rubric{code:4,reasoning:1}
+
+Adding a bias variable improves the prediction substantially, but the model is still problematic because the target seems to be a \emph{non-linear} function of the input. Complete \emph{LeastSquareBasis} class, that takes a data vector $x$ (i.e., assuming we only have one feature) and the polynomial order $p$. The function should perform a least squares fit based on a matrix $Z$ where each of its rows contains the values $(x_{i})^j$ for $j=0$ up to $p$. E.g., \emph{LeastSquaresBasis.fit(x,y)}  with $p = 3$ should form the matrix
+\[
+Z = 
+\left[\begin{array}{cccc}
+1 & x_1 & (x_1)^2 & (x_1)^3\\
+1 & x_2 & (x_2)^2 & (x_2)^3\\
+\vdots\\
+1 & x_n & (x_n)^2 & (x_N)^3\\
+\end{array}
+\right],
+\]
+and fit a least squares model based on it.
+\blu{Hand in the new class, and report the training and test error for $p = 0$ through $p= 10$. Explain the effect of $p$ on the training error and on the test error.}
+
+Note: you should write the code yourself; don't use a library like sklearn's \texttt{PolynomialFeatures}
+
+\items {
+\item  \blu{\href{https://github.ubc.ca/cpsc340/jaysc96\_hw3/blob/master/code/linear\_model.py}{linear\_model.py}}
+\item \blu{$p=0$}, Training error = $15480.52$, Testing error = $14390.763$.
+\item \blu{$p=1$}, Training error = $3551.346$, Testing error = $3393.869$.
+\item \blu{$p=2$}, Training error = $2167.992$, Testing error = $2480.725$.
+\item \blu{$p=3$}, Training error = $252.046$, Testing error = $242.805$.
+\item \blu{$p=4$}, Training error = $251.462$, Testing error = $242.126$.
+\item \blu{$p=5$}, Training error = $251.144$, Testing error = $239.545$.
+\item \blu{$p=6$}, Training error = $248.583$, Testing error = $246.005$.
+\item \blu{$p=7$}, Training error = $247.011$, Testing error = $242.888$.
+\item \blu{$p=8$}, Training error = $241.306$, Testing error = $245.966$.
+\item \blu{$p=9$}, Training error = $235.762$, Testing error = $259.296$.
+\item \blu{$p=10$}, Training error = $235.074$, Testing error = $256.3$.
+\item As p increases, we are able to fit the data more accurately and reduce training and testing error, but at around $p=5$, the testing error starts increasing due to overfitting on the given validation data.
+}
+
+\section{Non-Parametric Bases and Cross-Validation}
+
+Unfortunately, in practice we often don't know what basis to use. 
+However, if we have enough data then we can make up for this by using a basis that is flexible enough to 
+model any reasonable function. These may perform poorly if we don't have much data, but can
+ perform almost as well as the optimal basis as the size of the dataset grows. 
+ In this question you will explore using Gaussian radial basis functions (RBFs), 
+ which have this property. These RBFs depend on a parameter $\sigma$, which 
+ (like $p$ in the polynomial basis) can be chosen using a validation set. 
+ In this question, you will also see how cross-validation allows you to tune
+ parameters of the model on a larger dataset than a strict training/validation split would allow.
+
+\subsection{Proper Training and Validation Sets}
+\rubric{reasoning:3}
+
+If you run \verb|python main.py -q 3.1|, it will load a dataset and split the training examples
+ into a ``train" and a ``validation" set. It will then search for the best value of $\sigma$ 
+ for the RBF basis (it also uses regularization since $Z^TZ$ tends to be very close to singular).
+  Once it has the ``best" value of $\sigma$, it re-trains on the entire dataset and reports the 
+  training error on the full training set as well as the error on the test set.
+
+Unfortunately, there is a problem with the way this is done. Because of this problem, 
+the RBF basis doesn't perform much better than a linear model. 
+\blu{What is the problem with this training/validation/testing procedure? How can you fix this problem?}
+
+The problem is that the data in $X$ is sorted, and when we split directly without random sampling the training set is all negative values and the validation set is almost all positive values and hence the error comes out so high. This can be fixed by randomly sampling indices from $X$ for training and validation sets.
+
+Hint: The problem is not with the \texttt{LeastSquaresRBF} code, it is with the
+training/validation/testing procedure.
+You may want to plot the models that are considered during the search for $\sigma$
+
+
+\subsection{Cross-Validation}
+\rubric{code:3,reasoning:1}
+
+Using the standard solution to the above problem, a strange behaviour appears: 
+if you run the script more than once it might choose different values of $\sigma$. 
+It rarely performs too badly, but it's clear that the randomization has an effect 
+on the value of $\sigma$ that we choose. This variability would be reduced if we
+had a larger ``train" and ``validation" set, and one way to simulate this is 
+with \emph{cross-validation}. \blu{Modify the training/validation procedure to
+use 10-fold cross-validation to select $\sigma$, and hand in your code. 
+What value of $\sigma$ does this procedure typically select?}
+
+Note: your should implement this yourself. Don't use a library like sklearn's \verb|cross_val_score|.
+
+\items{
+\item \blu{\href{https://github.ubc.ca/cpsc340/jaysc96\_hw3/blob/master/code/linear\_model.py}{linear\_model.py}}
+\item This method gives the value $\sigma=1$, with Training error$=39.492$, Testing error$=71.168$ on full dataset.
+}
+
+\subsection{Cost of Non-Parametric Bases}
+\rubric{reasoning:3}
+
+When dealing with larger datasets, an important issue is the dependence of the
+computational cost on the number of training examples $n$ and the number of
+features $d$. \blu{What is the cost in big-O notation of training the model
+on $n$ training examples with $d$ features under (a) the linear basis and
+(b) Gaussian RBFs (for a fixed $\sigma$)? What is the cost of 
+classifying $t$ new examples under each of these two bases? When are RBFs 
+cheaper to train? When are RBFs cheaper to test?}
+
+ Big-O of:
+ \items{
+ \item Training on Linear Basis $= O(nd^2)$
+ \item Predicting on Linear Basis $=O(td)$
+ \item Training on Gaussian RBF $=O(n^2d)$
+ \item Predicting on Gaussian RBF $=O(ndt)$
+ }
+Gaussian RBFs are cheaper to train when the data is uniformly distributed, and they are cheaper to test when the testing data is distributed similar to the training data.
+
+\subsection{Non-Parametric Bases with Uneven Data}
+\rubric{reasoning:1}
+
+There are reasons why this dataset is particularly well-suited to Gaussian RBFs:
+\enum{
+\item The period of the oscillations stays constant.
+\item We have evenly sampled the training data across its domain.
+}
+If either of these assumptions are violated, the performance with our Gaussian RBFs might be much worse.
+\blu{Consider a scenario where 1 and/or 2 above is violated. What method(s) discussed in lecture might be more appropriate in this scenario?}
+
+\enum{
+\item If the period of oscillation is not constant, the best value of $\sigma$ will vary for the data and hence the result will be less accurate than using polynomial regression.  
+\item If the training data is unevenly sampled, we will get vast differences in RBF basis values next to each other, which is not ideal for prediction as the testing data will most likely not have similar data and the RBF basis for prediction will be way off.
+}
+
+\section{Robust Regression and Gradient Descent}
+
+If you run \verb|python main.py -q 4.1|, it will load a one-dimensional regression 
+dataset that has a non-trivial number of `outlier' data points. 
+These points do not fit the general trend of the rest of the data, 
+and pull the least squares model away from the main downward trend that most data points exhibit:
+\centerfig{.7}{../figs/least_squares_outliers.pdf}
+
+\subsection{Weighted Least Squares in One Dimension}
+\rubric{code:3}
+
+One of the most common variations on least squares is \emph{weighted} least squares. In this formulation, we have a weight $z_i$ for every training example. To fit the model, we minimize the weighted squared error,
+\[
+f(w) =  \frac{1}{2}\sum_{i=1}^n z_i(w^Tx_i - y_i)^2.
+\]
+In this formulation, the model focuses on making the error small for examples $i$ where $z_i$ is high. Similarly, if $z_i$ is low then the model allows a larger error.
+
+Complete the model class, \emph{WeightedLeastSquares}, that implements this model 
+(note that Q1.3.4 asks you to show how this formulation can be solved as a linear system).
+Apply this model to the data containing outliers, setting $z = 1$ for the first 
+$400$ data points and $z = 0.1$ for the last $100$ data points (which are the outliers). 
+\blu{Hand in your code and the updated plot}.
+
+\items{
+\item \blu{\href{https://github.ubc.ca/cpsc340/jaysc96\_hw3/blob/master/code/linear\_model.py}{linear\_model.py}}
+\item Updated plot: \centerfig{.7}{../figs/least_squares_weighted_outliers.pdf}
+}
+
+\subsection{Smooth Approximation to the L1-Norm}
+\rubric{reasoning:3}
+
+Unfortunately, we typically do not know the identities of the outliers. In situations where we suspect that there are outliers, but we do not know which examples are outliers, it makes sense to use a loss function that is more robust to outliers. In class, we discussed using the sum of absolute values objective,
+\[
+f(w) = \sum_{i=1}^n |w^Tx_i - y_i|.
+\]
+This is less sensitive to outliers than least squares, but it is non-differentiable and harder to optimize. Nevertheless, there are various smooth approximations to the absolute value function that are easy to optimize. One possible approximation is to use the log-sum-exp approximation
+\[
+|r| \approx \log(\exp(r) + \exp(-r)).
+\]
+Using this approximation, we obtain an objective of the form
+\[
+f(w) {=} \sum_{i=1}^n  \log\left(\exp(w^Tx_i - y_i) + \exp(y_i - w^Tx_i)\right).
+\]
+which is smooth but less sensitive to outliers than the squared error. \blu{Derive
+ the gradient $\nabla f$ of this function with respect to $w$. You should show your work but you do not have to express the final result in matrix notation.}
+ 
+$f(w) = \sum_{i=1}^n  \log\left(\exp(w^Tx_i - y_i) + \exp(y_i - w^Tx_i)\right)$
+\newline 
+\newline $\nabla f(w) = \sum_{i=1}^n\frac{\frac{d(\exp(w^Tx_i - y_i) + \exp(y_i - w^Tx_i))}{dw}}{\exp(w^Tx_i - y_i) + \exp(y_i - w^Tx_i)}=\frac{X^T\exp(Xw-y) -X^T \exp(y-Xw)}{\exp(Xw - y) + \exp(y-Xw)}=X^T\frac{\exp(Xw-y) - \exp(y-Xw)}{\exp(Xw - y) + \exp(y-Xw)}$
+
+
+\subsection{Robust Regression}
+\rubric{code:2,reasoning:1}
+
+The class \emph{LinearModelGradient} is the same as \emph{LeastSquares}, except that it fits the least squares model using a \emph{gradient descent} method. If you run \verb|python main.py -q 4.3| you'll see it produces the same fit as we obtained using the normal equations.
+
+One advantage of the gradient descent strategy is that it only costs $O(nd)$ for an iteration of the gradient method, which is faster than forming $X^TX$ which costs $O(nd^2)$. Of course, we need to know the \emph{number} of gradient iterations in order to precisely compare these two strategies, but for now we will assume that the number of gradient iterations is typically often reasonable.
+
+The typical input to a gradient method is a function that, given $w$, returns $f(w)$ and $\nabla f(w)$. See \emph{funObj} in \emph{LinearModelGradient} for an example. Note that the \emph{fit} function of \emph{LinearModelGradient} also has a numerical check that the gradient code is approximately correct, since implementing gradients is often error-prone.\footnote{Sometimes the gradient checker itself can be wrong. See CPSC 303 for a lot more on numerical differentiation.}
+
+A second advantage of gradient-based strategies is that they are able to solve 
+problems that do not have closed-form solutions, such as the formulation from the
+previous section. The class \emph{LinearModelGradient} has most of the implementation 
+of a gradient-based strategy for fitting the robust regression model under the log-sum-exp approximation. 
+The only part missing is the function and gradient calculation inside the \emph{funObj} code. 
+\blu{Modify \emph{funObj} to implement the objective function and gradient based on the smooth 
+approximation to the absolute value function (from the previous section). Hand in your code, as well
+as the plot obtained using this robust regression appraoch.}
+
+\items{
+\item \blu{\href{https://github.ubc.ca/cpsc340/jaysc96\_hw3/blob/master/code/linear\_model.py}{linear\_model.py}}
+\item Updated plot: \centerfig{.7}{../figs/gradient_descent_model.pdf}
+}
+
+\end{document}
